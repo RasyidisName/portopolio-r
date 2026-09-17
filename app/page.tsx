@@ -103,6 +103,12 @@ export default function Page() {
           </motion.div>
         </AnimatePresence>
       </section>
+      <section className="print-deck" aria-hidden="true">
+        <div className="slide"><AboutSlide editMode={false} image={profileImage} onImage={() => {}} /></div>
+        <div className="slide"><EducationSlide editMode={false} /></div>
+        {projects.map((project, index) => <div className="slide" key={`print-${project.number}-${index}`}><ProjectSlide project={project} index={index} totalProjects={projects.length} editMode={false} onImage={() => {}} /></div>)}
+        <div className="slide"><ContactSlide editMode={false} sent={sent} onSend={() => {}} /></div>
+      </section>
 
       <button className="nav-arrow nav-prev" onClick={() => go(-1)} disabled={active === 0} aria-label="Previous slide"><ArrowLeft size={20} /></button>
       <button className="nav-arrow nav-next" onClick={() => go(1)} disabled={active === total - 1} aria-label="Next slide"><ArrowRight size={20} /></button>
