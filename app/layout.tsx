@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Studio / 24 — Portfolio Presentation',
+  title: 'Portfolio Presentation',
   description: 'A modern, editable portfolio presentation for thoughtful creative work.',
   generator: 'v0.app',
   icons: {
