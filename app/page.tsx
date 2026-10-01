@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -41,7 +41,11 @@ const initialProjects = [
 ]
 
 function Editable({ children, editMode, className = '' }: { children: React.ReactNode; editMode: boolean; className?: string }) {
-  return <span className={className} contentEditable={editMode} suppressContentEditableWarning={editMode}>{children}</span>
+  return (
+    <span className={className} contentEditable={editMode} suppressContentEditableWarning={editMode}>
+      {children}
+    </span>
+  )
 }
 
 export default function Page() {
@@ -71,7 +75,11 @@ export default function Page() {
     const reader = new FileReader()
     reader.onload = () => {
       if (imageTarget === 'profile') setProfileImage(String(reader.result))
-      if (typeof imageTarget === 'number') setProjects((items) => items.map((item, index) => index === imageTarget ? { ...item, image: String(reader.result) } : item))
+      if (typeof imageTarget === 'number') {
+        setProjects((items) =>
+          items.map((item, index) => (index === imageTarget ? { ...item, image: String(reader.result) } : item))
+        )
+      }
     }
     reader.readAsDataURL(file)
     event.target.value = ''
@@ -82,10 +90,12 @@ export default function Page() {
     <main className="portfolio-shell">
       <input ref={fileInput} type="file" accept="image/*" className="sr-only" onChange={handleImage} />
       <header className="topbar">
-        <div className="brand-mark"><span className="brand-dot" /> <span>Portofolio / 26</span></div>
+        <div className="brand-mark">
+          <span className="brand-dot" /> <span>Portofolio / 26</span>
+        </div>
         <div className="topbar-actions">
-          <button 
-            className="tool-button" 
+          <button
+            className="tool-button"
             onClick={() => {
               const newProject = {
                 number: String(projects.length + 1).padStart(2, '0'),
@@ -93,7 +103,7 @@ export default function Page() {
                 category: 'Kategori · Tahun',
                 description: 'Deskripsi proyek baru Anda...',
                 image: 'https://images.unsplash.com/photo-1618477388954-7852f32655cb?auto=format&fit=crop&w=1200&q=85',
-                tags: ['Tag 1', 'Tag 2']
+                tags: ['Tag 1', 'Tag 2'],
               }
               setProjects([...projects, newProject])
               setActive(projects.length + 2)
@@ -101,54 +111,120 @@ export default function Page() {
           >
             <Plus size={15} /> Add Project
           </button>
-          <button className={`tool-button ${editMode ? 'active' : ''}`} onClick={() => setEditMode(!editMode)} aria-pressed={editMode}><Edit3 size={15} /> {editMode ? 'Done' : 'Edit'}</button>
-          {active >= 2 && active < total - 1 && <button className="tool-button danger" onClick={deleteCurrentPage} disabled={projects.length <= 1}><FileText size={15} /> Delete</button>}
-          <button className="tool-button" onClick={() => window.print()}><Download size={15} /> PDF</button>
+          <button className={`tool-button ${editMode ? 'active' : ''}`} onClick={() => setEditMode(!editMode)} aria-pressed={editMode}>
+            <Edit3 size={15} /> {editMode ? 'Done' : 'Edit'}
+          </button>
+          {active >= 2 && active < total - 1 && (
+            <button className="tool-button danger" onClick={deleteCurrentPage} disabled={projects.length <= 1}>
+              <FileText size={15} /> Delete
+            </button>
+          )}
+          <button className="tool-button" onClick={() => window.print()}>
+            <Download size={15} /> PDF
+          </button>
         </div>
       </header>
 
-      <div className="deck-progress" aria-label={`Slide ${active + 1} of ${total}`}><span style={{ width: `${((active + 1) / total) * 100}%` }} /></div>
-      <div className="slide-counter"><span>{String(active + 1).padStart(2, '0')}</span> / {String(total).padStart(2, '0')}</div>
+      <div className="deck-progress" aria-label={`Slide ${active + 1} of ${total}`}>
+        <span style={{ width: `${((active + 1) / total) * 100}%` }} />
+      </div>
+      <div className="slide-counter">
+        <span>{String(active + 1).padStart(2, '0')}</span> / {String(total).padStart(2, '0')}
+      </div>
 
       <section className="deck" aria-live="polite">
         <AnimatePresence initial={false} mode="wait">
-          <motion.div key={active} className="slide" initial={{ opacity: 0, x: 70 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -70 }} transition={{ duration: .38, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.div
+            key={active}
+            className="slide"
+            initial={{ opacity: 0, x: 70 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -70 }}
+            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+          >
             {active === 0 && <AboutSlide editMode={editMode} image={profileImage} onImage={() => pickImage('profile')} />}
             {active === 1 && <EducationSlide editMode={editMode} />}
-            {active >= 2 && active < total - 1 && <ProjectSlide project={projects[active - 2]} index={active - 2} totalProjects={projects.length} editMode={editMode} onImage={() => pickImage(active - 2)} />}
+            {active >= 2 && active < total - 1 && (
+              <ProjectSlide
+                project={projects[active - 2]}
+                index={active - 2}
+                totalProjects={projects.length}
+                editMode={editMode}
+                onImage={() => pickImage(active - 2)}
+              />
+            )}
             {active === total - 1 && <ContactSlide editMode={editMode} sent={sent} onSend={() => setSent(true)} />}
           </motion.div>
         </AnimatePresence>
       </section>
-      
+
       <section className="print-deck" aria-hidden="true">
-        <div className="slide"><AboutSlide editMode={false} image={profileImage} onImage={() => {}} /></div>
-        <div className="slide"><EducationSlide editMode={false} /></div>
-        {projects.map((project, index) => <div className="slide" key={`print-${project.number}-${index}`}><ProjectSlide project={project} index={index} totalProjects={projects.length} editMode={false} onImage={() => {}} /></div>)}
-        <div className="slide"><ContactSlide editMode={false} sent={sent} onSend={() => {}} /></div>
+        <div className="slide">
+          <AboutSlide editMode={false} image={profileImage} onImage={() => {}} />
+        </div>
+        <div className="slide">
+          <EducationSlide editMode={false} />
+        </div>
+        {projects.map((project, index) => (
+          <div className="slide" key={`print-${project.number}-${index}`}>
+            <ProjectSlide project={project} index={index} totalProjects={projects.length} editMode={false} onImage={() => {}} />
+          </div>
+        ))}
+        <div className="slide">
+          <ContactSlide editMode={false} sent={sent} onSend={() => {}} />
+        </div>
       </section>
 
-      <button className="nav-arrow nav-prev" onClick={() => go(-1)} disabled={active === 0} aria-label="Previous slide"><ArrowLeft size={20} /></button>
-      <button className="nav-arrow nav-next" onClick={() => go(1)} disabled={active === total - 1} aria-label="Next slide"><ArrowRight size={20} /></button>
+      <button className="nav-arrow nav-prev" onClick={() => go(-1)} disabled={active === 0} aria-label="Previous slide">
+        <ArrowLeft size={20} />
+      </button>
+      <button className="nav-arrow nav-next" onClick={() => go(1)} disabled={active === total - 1} aria-label="Next slide">
+        <ArrowRight size={20} />
+      </button>
     </main>
   )
 }
 
-function SlideHeading({ eyebrow, title, editMode }: { eyebrow: string; title: string; editMode: boolean }) {
-  return <div className="slide-heading"><div className="eyebrow"><span className="eyebrow-line" /> <Editable editMode={editMode}>{eyebrow}</Editable></div><h1><Editable editMode={editMode}>{title}</Editable></h1></div>
+function SlideHeading({ eyebrow, title, editMode }: { eyebrow: string; title: React.ReactNode; editMode: boolean }) {
+  return (
+    <div className="slide-heading">
+      <div className="eyebrow">
+        <span className="eyebrow-line" /> <Editable editMode={editMode}>{eyebrow}</Editable>
+      </div>
+      <h1>
+        <Editable editMode={editMode}>{title}</Editable>
+      </h1>
+    </div>
+  )
 }
 
 function AboutSlide({ editMode, image, onImage }: { editMode: boolean; image: string; onImage: () => void }) {
   return (
     <div className="about-grid">
       <div className="about-copy">
-        <SlideHeading eyebrow="Tentang Saya" title={<>Abdul Rasyid<br /><em>Web Developer &amp; IT Specialist.</em></>} editMode={editMode} />
+        <SlideHeading
+          eyebrow="Tentang Saya"
+          title={
+            <>
+              Abdul Rasyid
+              <br />
+              <em>Web Developer &amp; IT Specialist.</em>
+            </>
+          }
+          editMode={editMode}
+        />
         <p className="lead">
-          <Editable editMode={editMode}>Lulusan S1 Teknik Informatika yang berfokus pada pengembangan web modern, sistem informasi, dan solusi teknologi digital.</Editable>
+          <Editable editMode={editMode}>
+            Lulusan S1 Teknik Informatika yang berfokus pada pengembangan web modern, sistem informasi, dan solusi teknologi digital.
+          </Editable>
         </p>
         <div className="meta-row">
-          <span><Editable editMode={editMode}>TTL: 24 Januari 2003</Editable></span>
-          <span><Editable editMode={editMode}>Banjarmasin, Kalimantan Selatan</Editable></span>
+          <span>
+            <Editable editMode={editMode}>TTL: 24 Januari 2003</Editable>
+          </span>
+          <span>
+            <Editable editMode={editMode}>Banjarmasin, Kalimantan Selatan</Editable>
+          </span>
         </div>
         <div className="about-note">
           <Sparkles size={17} />
@@ -169,29 +245,51 @@ function AboutSlide({ editMode, image, onImage }: { editMode: boolean; image: st
 function EducationSlide({ editMode }: { editMode: boolean }) {
   return (
     <div className="education-slide">
-      <SlideHeading eyebrow="Latar Belakang" title={<>Perjalanan<br /><em>Pendidikan & Fokus.</em></>} editMode={editMode} />
+      <SlideHeading
+        eyebrow="Latar Belakang"
+        title={
+          <>
+            Perjalanan
+            <br />
+            <em>Pendidikan & Fokus.</em>
+          </>
+        }
+        editMode={editMode}
+      />
       <div className="timeline">
         <div className="timeline-item">
           <span className="year">Terbaru</span>
           <div>
-            <h2><Editable editMode={editMode}>S1 Teknik Informatika</Editable></h2>
-            <p><Editable editMode={editMode}>Fokus pada pengembangan aplikasi web modern (Laravel, React, Vite, dan Tailwind CSS).</Editable></p>
+            <h2>
+              <Editable editMode={editMode}>S1 Teknik Informatika</Editable>
+            </h2>
+            <p>
+              <Editable editMode={editMode}>Fokus pada pengembangan aplikasi web modern (Laravel, React, Vite, dan Tailwind CSS).</Editable>
+            </p>
           </div>
           <Check className="timeline-check" size={17} />
         </div>
         <div className="timeline-item">
           <span className="year">Mei—Jul 2026</span>
           <div>
-            <h2><Editable editMode={editMode}>Pelatihan Digital Marketing</Editable></h2>
-            <p><Editable editMode={editMode}>Eksplorasi strategi SEO, SEM, serta metodologi pengolahan data analitik (Google Colab & Orange).</Editable></p>
+            <h2>
+              <Editable editMode={editMode}>Pelatihan Digital Marketing</Editable>
+            </h2>
+            <p>
+              <Editable editMode={editMode}>Eksplorasi strategi SEO, SEM, serta metodologi pengolahan data analitik (Google Colab & Orange).</Editable>
+            </p>
           </div>
           <Check className="timeline-check" size={17} />
         </div>
         <div className="timeline-item">
           <span className="year">Berkelanjutan</span>
           <div>
-            <h2><Editable editMode={editMode}>Eksplorasi Sistem & Perangkat Keras</Editable></h2>
-            <p><Editable editMode={editMode}>Administrasi sistem Linux (Parrot OS, MATE/KDE), perawatan hardware, dan modifikasi OS.</Editable></p>
+            <h2>
+              <Editable editMode={editMode}>Eksplorasi Sistem & Perangkat Keras</Editable>
+            </h2>
+            <p>
+              <Editable editMode={editMode}>Administrasi sistem Linux (Parrot OS, MATE/KDE), perawatan hardware, dan modifikasi OS.</Editable>
+            </p>
           </div>
           <Check className="timeline-check" size={17} />
         </div>
@@ -203,7 +301,18 @@ function EducationSlide({ editMode }: { editMode: boolean }) {
   )
 }
 
-function ProjectSlide({ project, index, totalProjects, editMode, onImage }: { project: typeof initialProjects[number]; index: number; totalProjects: number; editMode: boolean; onImage: () => void }) {
+function ProjectSlide({
+  project,
+  totalProjects,
+  editMode,
+  onImage,
+}: {
+  project: (typeof initialProjects)[number]
+  index: number
+  totalProjects: number
+  editMode: boolean
+  onImage: () => void
+}) {
   return (
     <div className="project-slide">
       <div className="project-image-column">
@@ -211,14 +320,30 @@ function ProjectSlide({ project, index, totalProjects, editMode, onImage }: { pr
           <img src={project.image} alt={project.title} />
         </button>
         {editMode && <span className="image-hint"><Upload size={13} /> Click to replace</span>}
-        <span className="portrait-caption">{project.number} / {String(totalProjects).padStart(2, '0')} — Selected work</span>
+        <span className="portrait-caption">
+          {project.number} / {String(totalProjects).padStart(2, '0')} — Selected work
+        </span>
       </div>
       <div className="project-copy">
-        <div className="eyebrow"><span className="eyebrow-line" /> <Editable editMode={editMode}>{project.category}</Editable></div>
-        <h1><Editable editMode={editMode}>{project.title}</Editable></h1>
-        <p className="lead"><Editable editMode={editMode}>{project.description}</Editable></p>
-        <div className="tag-list">{project.tags.map((tag) => <span key={tag}><Editable editMode={editMode}>{tag}</Editable></span>)}</div>
-        <a href="#contact" className="text-link">View case study <ArrowUpRight size={15} /></a>
+        <div className="eyebrow">
+          <span className="eyebrow-line" /> <Editable editMode={editMode}>{project.category}</Editable>
+        </div>
+        <h1>
+          <Editable editMode={editMode}>{project.title}</Editable>
+        </h1>
+        <p className="lead">
+          <Editable editMode={editMode}>{project.description}</Editable>
+        </p>
+        <div className="tag-list">
+          {project.tags.map((tag) => (
+            <span key={tag}>
+              <Editable editMode={editMode}>{tag}</Editable>
+            </span>
+          ))}
+        </div>
+        <a href="#contact" className="text-link">
+          View case study <ArrowUpRight size={15} />
+        </a>
       </div>
     </div>
   )
@@ -229,27 +354,66 @@ function ContactSlide({ editMode, sent, onSend }: { editMode: boolean; sent: boo
     <div className="contact-slide" id="contact">
       <div className="contact-info-col">
         <SlideHeading eyebrow="Let's talk" title="Get in touch." editMode={editMode} />
-        <blockquote className="quote-card" style={{ marginTop: '20px', marginBottom: '30px', paddingLeft: '15px', borderLeft: '2px solid var(--green)', fontStyle: 'italic', color: 'var(--muted)' }}>
-          <p className="quote-text">
-            &ldquo;Bekerjalah seperti kalian mendapatkan Surga dan Dunia hingga hati kalian damai dalam menjalaninya.&rdquo;
-          </p>
+        <blockquote
+          className="quote-card"
+          style={{
+            marginTop: '20px',
+            marginBottom: '30px',
+            paddingLeft: '15px',
+            borderLeft: '2px solid var(--green)',
+            fontStyle: 'italic',
+            color: 'var(--muted)',
+          }}
+        >
+          <p className="quote-text">&ldquo;Bekerjalah seperti kalian mendapatkan Surga dan Dunia hingga hati kalian damai dalam menjalaninya.&rdquo;</p>
         </blockquote>
         <div className="contact-details">
-          <a href="mailto:hello@studio24.co"><Mail size={16} /> <Editable editMode={editMode}>hello@studio24.co</Editable></a>
-          <a href="tel:+4531124580"><Phone size={16} /> <Editable editMode={editMode}>+45 31 12 45 80</Editable></a>
-          <span><MapPin size={16} /> <Editable editMode={editMode}>Banjarmasin, ID</Editable></span>
+          <a href="mailto:hello@studio24.co">
+            <Mail size={16} /> <Editable editMode={editMode}>hello@studio24.co</Editable>
+          </a>
+          <a href="tel:+4531124580">
+            <Phone size={16} /> <Editable editMode={editMode}>+45 31 12 45 80</Editable>
+          </a>
+          <span>
+            <MapPin size={16} /> <Editable editMode={editMode}>Banjarmasin, ID</Editable>
+          </span>
         </div>
       </div>
 
-      <form className="contact-form" onSubmit={(event) => { event.preventDefault(); onSend(); }}>
-        <label>Name<input required placeholder="Your name" /></label>
-        <label>Email<input required type="email" placeholder="you@company.com" /></label>
-        <label>What are you working on?<textarea required placeholder="A few words about your project..." rows={3} /></label>
+      <form
+        className="contact-form"
+        onSubmit={(event) => {
+          event.preventDefault()
+          onSend()
+        }}
+      >
+        <label>
+          Name
+          <input required placeholder="Your name" />
+        </label>
+        <label>
+          Email
+          <input required type="email" placeholder="you@company.com" />
+        </label>
+        <label>
+          What are you working on?
+          <textarea required placeholder="A few words about your project..." rows={3} />
+        </label>
         <button type="submit" className="submit-button">
-          {sent ? <><Check size={16} /> Message sent</> : <><Send size={15} /> Send inquiry</>}
+          {sent ? (
+            <>
+              <Check size={16} /> Message sent
+            </>
+          ) : (
+            <>
+              <Send size={15} /> Send inquiry
+            </>
+          )}
         </button>
-        <p className="form-note"><FileText size={13} /> No newsletters. Just a thoughtful reply.</p>
+        <p className="form-note">
+          <FileText size={13} /> No newsletters. Just a thoughtful reply.
+        </p>
       </form>
     </div>
-  );
+  )
 }
